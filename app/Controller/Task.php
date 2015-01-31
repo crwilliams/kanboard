@@ -453,7 +453,7 @@ class Task extends Base
                     $task_id = $this->taskDuplication->duplicateToProject($task['id'], $values['project_id']);
                     $redirect_task_id = $task_id;
                 } else {
-                    $task_id = $this->taskDuplication->moveToProject($task['id'], $values['project_id'])
+                    $task_id = $this->taskDuplication->moveToProject($task['id'], $values['project_id']);
                     $redirect_task_id = $task['id'];
                 }
                 if ($task_id) {
