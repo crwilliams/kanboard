@@ -415,36 +415,7 @@ class Task extends Base
      */
     public function move()
     {
-        $task = $this->getTask();
-        $values = $task;
-        $errors = array();
-        $projects_list = $this->projectPermission->getActiveMemberProjects($this->userSession->getId());
-
-        unset($projects_list[$task['project_id']]);
-
-        if ($this->request->isPost()) {
-
-            $values = $this->request->getValues();
-            list($valid, $errors) = $this->taskValidator->validateProjectModification($values);
-
-            if ($valid) {
-
-                if ($this->taskDuplication->moveToProject($task['id'], $values['project_id'])) {
-                    $this->session->flash(t('Task updated successfully.'));
-                    $this->response->redirect('?controller=task&action=show&task_id='.$task['id'].'&project_id='.$values['project_id']);
-                }
-                else {
-                    $this->session->flashError(t('Unable to update your task.'));
-                }
-            }
-        }
-
-        $this->response->html($this->taskLayout('task/move_project', array(
-            'values' => $values,
-            'errors' => $errors,
-            'task' => $task,
-            'projects_list' => $projects_list,
-        )));
+        $this->moveOrCopy(false);
     }
 
     /**
@@ -453,6 +424,17 @@ class Task extends Base
      * @access public
      */
     public function copy()
+    {
+        $this->moveOrCopy(true);
+    }
+
+    /**
+     * Move or duplicate a task to another project
+     *
+     * @access private
+     * @param boolean   $copy  Whether to copy the task
+     */
+    private function moveOrCopy($copy)
     {
         $task = $this->getTask();
         $values = $task;
@@ -467,18 +449,25 @@ class Task extends Base
             list($valid, $errors) = $this->taskValidator->validateProjectModification($values);
 
             if ($valid) {
-                $task_id = $this->taskDuplication->duplicateToProject($task['id'], $values['project_id']);
+                if ($copy) {
+                    $task_id = $this->taskDuplication->duplicateToProject($task['id'], $values['project_id']);
+                    $redirect_task_id = $task_id;
+                } else {
+                    $task_id = $this->taskDuplication->moveToProject($task['id'], $values['project_id'])
+                    $redirect_task_id = $task['id'];
+                }
                 if ($task_id) {
-                    $this->session->flash(t('Task created successfully.'));
-                    $this->response->redirect('?controller=task&action=show&task_id='.$task_id.'&project_id='.$values['project_id']);
+                    $this->session->flash(t($copy ? 'Task created successfully.' : 'Task updated successfully.'));
+                    $this->response->redirect('?controller=task&action=show&task_id='.$redirect_task_id.'&project_id='.$values['project_id']);
                 }
                 else {
-                    $this->session->flashError(t('Unable to create your task.'));
+                    $this->session->flashError(t($copy ? 'Unable to create your task.' : 'Unable to update your task.'));
                 }
             }
         }
 
-        $this->response->html($this->taskLayout('task/duplicate_project', array(
+        $template_name = $copy ? 'task/duplicate_project' : 'task/move_project';
+        $this->response->html($this->taskLayout($template_name, array(
             'values' => $values,
             'errors' => $errors,
             'task' => $task,
