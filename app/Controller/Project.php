@@ -329,25 +329,7 @@ class Project extends Base
      */
     public function disable()
     {
-        $project = $this->getProject();
-
-        if ($this->request->getStringParam('disable') === 'yes') {
-
-            $this->checkCSRFParam();
-
-            if ($this->project->disable($project['id'])) {
-                $this->session->flash(t('Project disabled successfully.'));
-            } else {
-                $this->session->flashError(t('Unable to disable this project.'));
-            }
-
-            $this->response->redirect('?controller=project&action=show&project_id='.$project['id']);
-        }
-
-        $this->response->html($this->projectLayout('project/disable', array(
-            'project' => $project,
-            'title' => t('Project activation')
-        )));
+        $this->enableOrDisable(true);
     }
 
     /**
@@ -357,22 +339,39 @@ class Project extends Base
      */
     public function enable()
     {
+        $this->enableOrDisable(false);
+    }
+
+    /**
+     * Enable or disable a project
+     *
+     * @access private
+     * @param boolean   $disable  Whether to disable the project
+     */
+    private function enableOrDisable($disable)
+    {
         $project = $this->getProject();
 
         if ($this->request->getStringParam('enable') === 'yes') {
 
             $this->checkCSRFParam();
 
-            if ($this->project->enable($project['id'])) {
-                $this->session->flash(t('Project activated successfully.'));
+            if ($disable) {
+                $success = $this->project->enable($project['id']);
             } else {
-                $this->session->flashError(t('Unable to activate this project.'));
+                $success = $this->project->disable($project['id']);
+            }
+            if ($success) {
+                $this->session->flash(t($disable ? 'Project disabled successfully.' : 'Project activated successfully.'));
+            } else {
+                $this->session->flashError(t($disable ? 'Unable to disable this project.' : 'Unable to activate this project.'));
             }
 
             $this->response->redirect('?controller=project&action=show&project_id='.$project['id']);
         }
 
-        $this->response->html($this->projectLayout('project/enable', array(
+        $template_name = $disable ? 'project/disable' : 'project/enable';
+        $this->response->html($this->projectLayout($template_name, array(
             'project' => $project,
             'title' => t('Project activation')
         )));
