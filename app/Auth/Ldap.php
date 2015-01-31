@@ -215,7 +215,7 @@ class Ldap extends Base
      */
     public function lookup($username = null, $email = null)
     {
-        $query = getQuery($username, $email);
+        $query = $this->getQuery($username, $email);
         if ($query === false) {
             return false;
         }
