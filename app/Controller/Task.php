@@ -277,9 +277,9 @@ class Task extends Base
             $this->checkCSRFParam();
 
             if ($close) {
-                $sucess = $this->taskStatus->close($task['id']);
+                $success = $this->taskStatus->close($task['id']);
             } else {
-                $sucess = $this->taskStatus->open($task['id']);
+                $success = $this->taskStatus->open($task['id']);
             }
             if ($success) {
                 $this->session->flash(t($close ? 'Task closed successfully.' : 'Task opened successfully.'));
