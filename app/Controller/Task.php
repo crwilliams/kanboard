@@ -249,24 +249,7 @@ class Task extends Base
      */
     public function close()
     {
-        $task = $this->getTask();
-
-        if ($this->request->getStringParam('confirmation') === 'yes') {
-
-            $this->checkCSRFParam();
-
-            if ($this->taskStatus->close($task['id'])) {
-                $this->session->flash(t('Task closed successfully.'));
-            } else {
-                $this->session->flashError(t('Unable to close this task.'));
-            }
-
-            $this->response->redirect('?controller=task&action=show&task_id='.$task['id'].'&project_id='.$task['project_id']);
-        }
-
-        $this->response->html($this->taskLayout('task/close', array(
-            'task' => $task,
-        )));
+        $this->openOrClose(true);
     }
 
     /**
@@ -276,22 +259,39 @@ class Task extends Base
      */
     public function open()
     {
+        $this->openOrClose(false);
+    }
+
+    /**
+     * Open or hide a task
+     *
+     * @access private
+     * @param boolean   $close  Whether to hide the task
+     */
+    private function openOrClose($close)
+    {
         $task = $this->getTask();
 
         if ($this->request->getStringParam('confirmation') === 'yes') {
 
             $this->checkCSRFParam();
 
-            if ($this->taskStatus->open($task['id'])) {
-                $this->session->flash(t('Task opened successfully.'));
+            if ($close) {
+                $sucess = $this->taskStatus->close($task['id']);
             } else {
-                $this->session->flashError(t('Unable to open this task.'));
+                $sucess = $this->taskStatus->open($task['id']);
+            }
+            if ($success) {
+                $this->session->flash(t($close ? 'Task closed successfully.' : 'Task opened successfully.'));
+            } else {
+                $this->session->flashError(t($close ? 'Unable to close this task.' : 'Unable to open this task.'));
             }
 
             $this->response->redirect('?controller=task&action=show&task_id='.$task['id'].'&project_id='.$task['project_id']);
         }
 
-        $this->response->html($this->taskLayout('task/open', array(
+        $template_name = $close ? 'task/close' : 'task/open';
+        $this->response->html($this->taskLayout($template_name, array(
             'task' => $task,
         )));
     }
