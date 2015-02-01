@@ -132,7 +132,7 @@ class Task extends Base
             'Task created successfully.',
             'Unable to create your task.',
             'saveRedirect',
-            array('creator_id' => $this->userSession->getId()),
+            array('creator_id' => $this->userSession->getId())
         );
     }
     
@@ -194,7 +194,7 @@ class Task extends Base
             'edit',
             'Task updated successfully.',
             'Unable to update your task.',
-            'updateRedirect',
+            'updateRedirect'
         );
     }
     
@@ -250,7 +250,7 @@ class Task extends Base
             null,
             'Task updated successfully.',
             'Unable to update your task.',
-            null,
+            null
         );
         $this->response->redirect('?controller=task&action=show&task_id='.$task['id'].'&project_id='.$task['project_id']);
     }
