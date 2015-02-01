@@ -124,19 +124,18 @@ class Task extends Base
      */
     public function save()
     {
-        $project = $this->getProject();
-        $this->generic(
+        list($values, $errors) = $this->generic(
             'validateCreation',
-            'create',
             'create',
             'Task created successfully.',
             'Unable to create your task.',
             'saveRedirect',
             array('creator_id' => $this->userSession->getId())
         );
+        $this->create($values, $errors);
     }
     
-    private function saveRedirect($values)
+    private function saveRedirect()
     {
         $values = $this->request->getValues();
         if (isset($values['another_task']) && $values['another_task'] == 1) {
@@ -188,14 +187,14 @@ class Task extends Base
      */
     public function update()
     {
-        $this->generic(
+        list($values, $errors) = $this->generic(
             'validateModification',
             'update',
-            'edit',
             'Task updated successfully.',
             'Unable to update your task.',
             'updateRedirect'
         );
+        $this->edit($values, $errors);
     }
     
     private function updateRedirect()
@@ -208,7 +207,7 @@ class Task extends Base
         }
     }
     
-    private function generic($validate_fn, $real_fn, $final_fn, $success_msg, $fail_msg, $redirect_fn, array $extra_values = array())
+    private function generic($validate_fn, $real_fn, $success_msg, $fail_msg, $redirect_fn, array $extra_values = array())
     {
         $values = $this->request->getValues();
         foreach($extra_values as $k => $v) {
@@ -221,19 +220,15 @@ class Task extends Base
             if ($this->task->$real_fn($values)) {
                 $this->session->flash(t($success_msg));
 
-                $redirect_url = $this->$redirect_fn();
-                if (! is_null($redirect_url)) {
-                    $this->response->redirect($redirect_url);
+                if (! is_null($redirect_fn)) {
+                    $this->response->redirect($this->$redirect_fn());
                 }
             }
             else {
                 $this->session->flashError(t($fail_msg));
             }
         }
-
-        if (! is_null($final_fn)) {
-            $this->$final_fn($values, $errors);
-        }
+        return array($values, $errors);
     }
 
     /**
@@ -247,7 +242,6 @@ class Task extends Base
         $this->generic(
             'validateTimeModification',
             'update',
-            null,
             'Task updated successfully.',
             'Unable to update your task.',
             null
