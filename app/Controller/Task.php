@@ -124,28 +124,32 @@ class Task extends Base
      */
     public function save()
     {
+        $values = $this->request->getValues();
+        $values['creator_id'] = $this->userSession->getId();
         list($values, $errors) = $this->generic(
             'validateCreation',
             'create',
             'Task created successfully.',
             'Unable to create your task.',
             'saveRedirect',
-            array('creator_id' => $this->userSession->getId())
+            $values
         );
         $this->create($values, $errors);
     }
     
-    private function saveRedirect()
+    private function saveRedirect($success)
     {
-        $values = $this->request->getValues();
-        if (isset($values['another_task']) && $values['another_task'] == 1) {
-            unset($values['title']);
-            unset($values['description']);
-            return '?controller=task&action=create&'.http_build_query($values);
-        }
-        else {
-            $project = $this->getProject();
-            return '?controller=board&action=show&project_id='.$project['id'];
+        if ($success) {
+            $values = $this->request->getValues();
+            if (isset($values['another_task']) && $values['another_task'] == 1) {
+                unset($values['title']);
+                unset($values['description']);
+                return '?controller=task&action=create&'.http_build_query($values);
+            }
+            else {
+                $project = $this->getProject();
+                return '?controller=board&action=show&project_id='.$project['id'];
+            }
         }
     }
 
@@ -192,40 +196,39 @@ class Task extends Base
             'update',
             'Task updated successfully.',
             'Unable to update your task.',
-            'updateRedirect'
+            'updateRedirect',
+            $this->request->getValues()
         );
         $this->edit($values, $errors);
     }
     
-    private function updateRedirect()
+    private function updateRedirect($success)
     {
-        $task = $this->getTask();
-        if ($this->request->getIntegerParam('ajax')) {
-            return '?controller=board&action=show&project_id='.$task['project_id'];
-        } else {    
-            return '?controller=task&action=show&task_id='.$task['id'].'&project_id='.$task['project_id'];
+        if ($success) {
+            $task = $this->getTask();
+            if ($this->request->getIntegerParam('ajax')) {
+                return '?controller=board&action=show&project_id='.$task['project_id'];
+            } else {
+                return '?controller=task&action=show&task_id='.$task['id'].'&project_id='.$task['project_id'];
+            }
         }
     }
     
-    private function generic($validate_fn, $real_fn, $success_msg, $fail_msg, $redirect_fn, array $extra_values = array())
+    private function generic($validate_fn, $real_fn, $success_msg, $fail_msg, $redirect_fn, array $values)
     {
-        $values = $this->request->getValues();
-        foreach($extra_values as $k => $v) {
-            $values[$k] = $v;
-        }
-
         list($valid, $errors) = $this->task->$validate_fn($values);
 
         if ($valid) {
-            if ($this->task->$real_fn($values)) {
+            $success = $this->task->$real_fn($values);
+            if ($success) {
                 $this->session->flash(t($success_msg));
-
-                if (! is_null($redirect_fn)) {
-                    $this->response->redirect($this->$redirect_fn());
-                }
             }
             else {
                 $this->session->flashError(t($fail_msg));
+            }
+
+            if (! is_null($redirect_fn)) {
+                $this->response->redirect($this->$redirect_fn($success));
             }
         }
         return array($values, $errors);
@@ -244,7 +247,8 @@ class Task extends Base
             'update',
             'Task updated successfully.',
             'Unable to update your task.',
-            null
+            null,
+            $this->request->getValues()
         );
         $this->response->redirect('?controller=task&action=show&task_id='.$task['id'].'&project_id='.$task['project_id']);
     }
@@ -368,26 +372,15 @@ class Task extends Base
 
         if ($this->request->isPost()) {
 
-            $values = $this->request->getValues();
-
-            list($valid, $errors) = $this->task->validateDescriptionCreation($values);
-
-            if ($valid) {
-
-                if ($this->task->update($values)) {
-                    $this->session->flash(t('Task updated successfully.'));
-                }
-                else {
-                    $this->session->flashError(t('Unable to update your task.'));
-                }
-
-                if ($ajax) {
-                    $this->response->redirect('?controller=board&action=show&project_id='.$task['project_id']);
-                }
-                else {
-                    $this->response->redirect('?controller=task&action=show&task_id='.$task['id'].'&project_id='.$task['project_id']);
-                }
-            }
+            $values = $this->request->getValues();            
+            list($values, $errors) = $this->generic(
+                'validateDescriptionCreation',
+                'update',
+                'Task updated successfully.',
+                'Unable to update your task.',
+                'descriptionRedirect',
+                $values
+            );
         }
         else {
             $values = $task;
@@ -402,6 +395,17 @@ class Task extends Base
         );
 
         $this->respond('task/edit_description', $params);
+    }
+    
+    private function descriptionRedirect()
+    {
+        $task = $this->getTask();
+        if ($this->request->isAjax() || $this->request->getIntegerParam('ajax')) {
+            return '?controller=board&action=show&project_id='.$task['project_id'];
+        }
+        else {
+            return '?controller=task&action=show&task_id='.$task['id'].'&project_id='.$task['project_id'];
+        }
     }
 
     /**
