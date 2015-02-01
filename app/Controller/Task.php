@@ -125,31 +125,29 @@ class Task extends Base
     public function save()
     {
         $project = $this->getProject();
+        $this->generic(
+            'validateCreation',
+            'create',
+            'create',
+            'Task created successfully.',
+            'Unable to create your task.',
+            'saveRedirect',
+            array('creator_id' => $this->userSession->getId()),
+        );
+    }
+    
+    private function saveRedirect($values)
+    {
         $values = $this->request->getValues();
-        $values['creator_id'] = $this->userSession->getId();
-
-        list($valid, $errors) = $this->task->validateCreation($values);
-
-        if ($valid) {
-
-            if ($this->task->create($values)) {
-                $this->session->flash(t('Task created successfully.'));
-
-                if (isset($values['another_task']) && $values['another_task'] == 1) {
-                    unset($values['title']);
-                    unset($values['description']);
-                    $this->response->redirect('?controller=task&action=create&'.http_build_query($values));
-                }
-                else {
-                    $this->response->redirect('?controller=board&action=show&project_id='.$project['id']);
-                }
-            }
-            else {
-                $this->session->flashError(t('Unable to create your task.'));
-            }
+        if (isset($values['another_task']) && $values['another_task'] == 1) {
+            unset($values['title']);
+            unset($values['description']);
+            return '?controller=task&action=create&'.http_build_query($values);
         }
-
-        $this->create($values, $errors);
+        else {
+            $project = $this->getProject();
+            return '?controller=board&action=show&project_id='.$project['id'];
+        }
     }
 
     /**
@@ -190,29 +188,52 @@ class Task extends Base
      */
     public function update()
     {
+        $this->generic(
+            'validateModification',
+            'update',
+            'edit',
+            'Task updated successfully.',
+            'Unable to update your task.',
+            'updateRedirect',
+        );
+    }
+    
+    private function updateRedirect()
+    {
         $task = $this->getTask();
+        if ($this->request->getIntegerParam('ajax')) {
+            return '?controller=board&action=show&project_id='.$task['project_id'];
+        } else {    
+            return '?controller=task&action=show&task_id='.$task['id'].'&project_id='.$task['project_id'];
+        }
+    }
+    
+    private function generic($validate_fn, $real_fn, $final_fn, $success_msg, $fail_msg, $redirect_fn, array $extra_values = array())
+    {
         $values = $this->request->getValues();
+        foreach($extra_values as $k => $v) {
+            $values[$k] = $v;
+        }
 
-        list($valid, $errors) = $this->task->validateModification($values);
+        list($valid, $errors) = $this->task->$validate_fn($values);
 
         if ($valid) {
+            if ($this->task->$real_fn($values)) {
+                $this->session->flash(t($success_msg));
 
-            if ($this->task->update($values)) {
-                $this->session->flash(t('Task updated successfully.'));
-
-                if ($this->request->getIntegerParam('ajax')) {
-                    $this->response->redirect('?controller=board&action=show&project_id='.$task['project_id']);
-                }
-                else {
-                    $this->response->redirect('?controller=task&action=show&task_id='.$task['id'].'&project_id='.$task['project_id']);
+                $redirect_url = $this->$redirect_fn();
+                if (! is_null($redirect_url)) {
+                    $this->response->redirect($redirect_url);
                 }
             }
             else {
-                $this->session->flashError(t('Unable to update your task.'));
+                $this->session->flashError(t($fail_msg));
             }
         }
 
-        $this->edit($values, $errors);
+        if (! is_null($final_fn)) {
+            $this->$final_fn($values, $errors);
+        }
     }
 
     /**
@@ -223,17 +244,14 @@ class Task extends Base
     public function time()
     {
         $task = $this->getTask();
-        $values = $this->request->getValues();
-
-        list($valid,) = $this->task->validateTimeModification($values);
-
-        if ($valid && $this->task->update($values)) {
-            $this->session->flash(t('Task updated successfully.'));
-        }
-        else {
-            $this->session->flashError(t('Unable to update your task.'));
-        }
-
+        $this->generic(
+            'validateTimeModification',
+            'update',
+            null,
+            'Task updated successfully.',
+            'Unable to update your task.',
+            null,
+        );
         $this->response->redirect('?controller=task&action=show&task_id='.$task['id'].'&project_id='.$task['project_id']);
     }
 
