@@ -144,11 +144,11 @@ class Task extends Base
             if (isset($values['another_task']) && $values['another_task'] == 1) {
                 unset($values['title']);
                 unset($values['description']);
-                return '?controller=task&action=create&'.http_build_query($values);
+                $this->response->redirect('?controller=task&action=create&'.http_build_query($values));
             }
             else {
                 $project = $this->getProject();
-                return '?controller=board&action=show&project_id='.$project['id'];
+                $this->response->redirect('?controller=board&action=show&project_id='.$project['id']);
             }
         }
     }
@@ -205,12 +205,7 @@ class Task extends Base
     private function updateRedirect($success)
     {
         if ($success) {
-            $task = $this->getTask();
-            if ($this->request->getIntegerParam('ajax')) {
-                return '?controller=board&action=show&project_id='.$task['project_id'];
-            } else {
-                return '?controller=task&action=show&task_id='.$task['id'].'&project_id='.$task['project_id'];
-            }
+            $this->genericRedirect($this->request->getIntegerParam('ajax'));
         }
     }
     
@@ -228,7 +223,7 @@ class Task extends Base
             }
 
             if (! is_null($redirect_fn)) {
-                $this->response->redirect($this->$redirect_fn($success));
+                $this->$redirect_fn($success);
             }
         }
         return array($values, $errors);
@@ -399,12 +394,16 @@ class Task extends Base
     
     private function descriptionRedirect()
     {
+        $this->genericRedirect($this->request->isAjax() || $this->request->getIntegerParam('ajax'));
+    }
+    
+    private function genericRedirect($ajax)
         $task = $this->getTask();
-        if ($this->request->isAjax() || $this->request->getIntegerParam('ajax')) {
-            return '?controller=board&action=show&project_id='.$task['project_id'];
+        if ($ajax) {
+            $this->response->redirect('?controller=board&action=show&project_id='.$task['project_id']);
         }
         else {
-            return '?controller=task&action=show&task_id='.$task['id'].'&project_id='.$task['project_id'];
+            $this->response->redirect('?controller=task&action=show&task_id='.$task['id'].'&project_id='.$task['project_id']);
         }
     }
 
