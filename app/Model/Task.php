@@ -132,12 +132,12 @@ class Task extends Base
         return $this->taskDuplication->duplicate($task_id);
     }
 
-    public function duplicateToProject($task_id)
+    public function duplicateToProject($task_id, $project_id)
     {
         return $this->taskDuplication->duplicateToProject($task_id, $project_id);
     }
 
-    public function moveToProject($task_id)
+    public function moveToProject($task_id, $project_id)
     {
         return $this->taskDuplication->moveToProject($task_id, $project_id);
     }

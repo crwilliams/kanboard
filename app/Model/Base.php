@@ -34,10 +34,14 @@ use Pimple\Container;
  * @property \Model\Swimlane           $swimlane
  * @property \Model\Task               $task
  * @property \Model\TaskCreation       $taskCreation
+ * @property \Model\TaskDuplication    $taskDuplication
  * @property \Model\TaskExport         $taskExport
  * @property \Model\TaskFinder         $taskFinder
  * @property \Model\TaskHistory        $taskHistory
+ * @property \Model\TaskModification   $taskModification
+ * @property \Model\TaskPermission     $taskPermission
  * @property \Model\TaskPosition       $taskPosition
+ * @property \Model\TaskStatus         $taskStatus
  * @property \Model\TaskValidator      $taskValidator
  * @property \Model\TimeTracking       $timeTracking
  * @property \Model\User               $user
