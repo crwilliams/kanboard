@@ -76,4 +76,69 @@ class Task extends Base
 
         return 0;
     }
+    
+    public function create($values)
+    {
+        return $this->taskCreation->create($values);
+    }
+
+    public function update($values)
+    {
+        return $this->taskModification->update($values);
+    }
+
+    public function validateCreation($values)
+    {
+        return $this->taskValidator->validateCreation($values);
+    }
+
+    public function validateModification($values)
+    {
+        return $this->taskValidator->validateModification($values);
+    }
+
+    public function validateTimeModification($values)
+    {
+        return $this->taskValidator->validateTimeModification($values);
+    }
+
+    public function validateDescriptionCreation($values)
+    {
+        return $this->taskValidator->validateDescriptionCreation($values);
+    }
+
+    public function validateProjectModification($values)
+    {
+        return $this->taskValidator->validateProjectModification($values);
+    }
+
+    public function open($values)
+    {
+        return $this->taskStatus->open($values);
+    }
+
+    public function close($values)
+    {
+        return $this->taskStatus->close($values);
+    }
+
+    public function canRemoveTask($task)
+    {
+        return $this->taskPermission->canRemoveTask($task);
+    }
+
+    public function duplicate($task_id)
+    {
+        return $this->taskDuplication->duplicate($task_id);
+    }
+
+    public function duplicateToProject($task_id)
+    {
+        return $this->taskDuplication->duplicateToProject($task_id, $project_id);
+    }
+
+    public function moveToProject($task_id)
+    {
+        return $this->taskDuplication->moveToProject($task_id, $project_id);
+    }
 }

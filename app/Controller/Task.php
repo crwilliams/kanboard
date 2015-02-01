@@ -128,11 +128,11 @@ class Task extends Base
         $values = $this->request->getValues();
         $values['creator_id'] = $this->userSession->getId();
 
-        list($valid, $errors) = $this->taskValidator->validateCreation($values);
+        list($valid, $errors) = $this->task->validateCreation($values);
 
         if ($valid) {
 
-            if ($this->taskCreation->create($values)) {
+            if ($this->task->create($values)) {
                 $this->session->flash(t('Task created successfully.'));
 
                 if (isset($values['another_task']) && $values['another_task'] == 1) {
@@ -193,11 +193,11 @@ class Task extends Base
         $task = $this->getTask();
         $values = $this->request->getValues();
 
-        list($valid, $errors) = $this->taskValidator->validateModification($values);
+        list($valid, $errors) = $this->task->validateModification($values);
 
         if ($valid) {
 
-            if ($this->taskModification->update($values)) {
+            if ($this->task->update($values)) {
                 $this->session->flash(t('Task updated successfully.'));
 
                 if ($this->request->getIntegerParam('ajax')) {
@@ -225,9 +225,9 @@ class Task extends Base
         $task = $this->getTask();
         $values = $this->request->getValues();
 
-        list($valid,) = $this->taskValidator->validateTimeModification($values);
+        list($valid,) = $this->task->validateTimeModification($values);
 
-        if ($valid && $this->taskModification->update($values)) {
+        if ($valid && $this->task->update($values)) {
             $this->session->flash(t('Task updated successfully.'));
         }
         else {
@@ -271,7 +271,7 @@ class Task extends Base
 
             $this->checkCSRFParam();
 
-            if ($this->taskStatus->$action($task['id'])) {
+            if ($this->task->$action($task['id'])) {
                 $this->session->flash(t('Task ' . $action . 'd successfully.'));
             } else {
                 $this->session->flashError(t('Unable to ' . $action . ' this task.' ));
@@ -294,7 +294,7 @@ class Task extends Base
     {
         $task = $this->getTask();
 
-        if (! $this->taskPermission->canRemoveTask($task)) {
+        if (! $this->task->canRemoveTask($task)) {
             $this->forbidden();
         }
 
@@ -328,7 +328,7 @@ class Task extends Base
         if ($this->request->getStringParam('confirmation') === 'yes') {
 
             $this->checkCSRFParam();
-            $task_id = $this->taskDuplication->duplicate($task['id']);
+            $task_id = $this->task->duplicate($task['id']);
 
             if ($task_id) {
                 $this->session->flash(t('Task created successfully.'));
@@ -358,11 +358,11 @@ class Task extends Base
 
             $values = $this->request->getValues();
 
-            list($valid, $errors) = $this->taskValidator->validateDescriptionCreation($values);
+            list($valid, $errors) = $this->task->validateDescriptionCreation($values);
 
             if ($valid) {
 
-                if ($this->taskModification->update($values)) {
+                if ($this->task->update($values)) {
                     $this->session->flash(t('Task updated successfully.'));
                 }
                 else {
@@ -431,14 +431,14 @@ class Task extends Base
         if ($this->request->isPost()) {
 
             $values = $this->request->getValues();
-            list($valid, $errors) = $this->taskValidator->validateProjectModification($values);
+            list($valid, $errors) = $this->task->validateProjectModification($values);
 
             if ($valid) {
                 if ($action == 'duplicate') {
-                    $task_id = $this->taskDuplication->duplicateToProject($task['id'], $values['project_id']);
+                    $task_id = $this->task->duplicateToProject($task['id'], $values['project_id']);
                     $redirect_task_id = $task_id;
                 } else {
-                    $task_id = $this->taskDuplication->moveToProject($task['id'], $values['project_id']);
+                    $task_id = $this->task->moveToProject($task['id'], $values['project_id']);
                     $redirect_task_id = $task['id'];
                 }
                 if ($task_id) {
