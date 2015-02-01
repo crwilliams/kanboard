@@ -398,11 +398,11 @@ class Task extends Base
     }
     
     private function genericRedirect($ajax)
+    {
         $task = $this->getTask();
         if ($ajax) {
             $this->response->redirect('?controller=board&action=show&project_id='.$task['project_id']);
-        }
-        else {
+        } else {
             $this->response->redirect('?controller=task&action=show&task_id='.$task['id'].'&project_id='.$task['project_id']);
         }
     }
