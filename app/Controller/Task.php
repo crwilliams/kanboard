@@ -180,12 +180,7 @@ class Task extends Base
             'ajax' => $ajax,
         );
 
-        if ($ajax) {
-            $this->response->html($this->template->render('task/edit', $params));
-        }
-        else {
-            $this->response->html($this->taskLayout('task/edit', $params));
-        }
+        $this->respond('task/edit', $params);
     }
 
     /**
@@ -394,12 +389,7 @@ class Task extends Base
             'ajax' => $ajax,
         );
 
-        if ($ajax) {
-            $this->response->html($this->template->render('task/edit_description', $params));
-        }
-        else {
-            $this->response->html($this->taskLayout('task/edit_description', $params));
-        }
+        $this->respond('task/edit_description', $params);
     }
 
     /**
@@ -467,5 +457,15 @@ class Task extends Base
             'task' => $task,
             'projects_list' => $projects_list,
         )));
+    }
+    
+    private function respond($path, $params)
+    {
+        if ($params['ajax']) {
+            $this->response->html($this->template->render($path, $params));
+        }
+        else {
+            $this->response->html($this->taskLayout($path, $params));
+        }
     }
 }
