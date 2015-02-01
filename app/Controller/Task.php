@@ -249,7 +249,7 @@ class Task extends Base
      */
     public function close()
     {
-        $this->openOrClose(true);
+        $this->openOrClose('close');
     }
 
     /**
@@ -259,16 +259,16 @@ class Task extends Base
      */
     public function open()
     {
-        $this->openOrClose(false);
+        $this->openOrClose('open');
     }
 
     /**
      * Open or hide a task
      *
      * @access private
-     * @param boolean   $close  Whether to hide the task
+     * @param string   $action   The name of the action
      */
-    private function openOrClose($close)
+    private function openOrClose($action)
     {
         $task = $this->getTask();
 
@@ -276,22 +276,16 @@ class Task extends Base
 
             $this->checkCSRFParam();
 
-            if ($close) {
-                $success = $this->taskStatus->close($task['id']);
+            if ($this->taskStatus->$action($task['id'])) {
+                $this->session->flash(t('Task ' . $action . 'd successfully.'));
             } else {
-                $success = $this->taskStatus->open($task['id']);
-            }
-            if ($success) {
-                $this->session->flash(t($close ? 'Task closed successfully.' : 'Task opened successfully.'));
-            } else {
-                $this->session->flashError(t($close ? 'Unable to close this task.' : 'Unable to open this task.'));
+                $this->session->flashError(t('Unable to ' . $action . ' this task.' ));
             }
 
             $this->response->redirect('?controller=task&action=show&task_id='.$task['id'].'&project_id='.$task['project_id']);
         }
 
-        $template_name = $close ? 'task/close' : 'task/open';
-        $this->response->html($this->taskLayout($template_name, array(
+        $this->response->html($this->taskLayout('task/' . $action, array(
             'task' => $task,
         )));
     }
@@ -415,7 +409,7 @@ class Task extends Base
      */
     public function move()
     {
-        $this->moveOrCopy(false);
+        $this->moveOrCopy('move', 'update');
     }
 
     /**
@@ -425,16 +419,17 @@ class Task extends Base
      */
     public function copy()
     {
-        $this->moveOrCopy(true);
+        $this->moveOrCopy('duplicate', 'create');
     }
 
     /**
      * Move or duplicate a task to another project
      *
      * @access private
-     * @param boolean   $copy  Whether to copy the task
+     * @param string   $action          The name of the action
+     * @param string   $action_message  The name of the action to use in the displayed message
      */
-    private function moveOrCopy($copy)
+    private function moveOrCopy($action, $action_message)
     {
         $task = $this->getTask();
         $values = $task;
@@ -449,7 +444,7 @@ class Task extends Base
             list($valid, $errors) = $this->taskValidator->validateProjectModification($values);
 
             if ($valid) {
-                if ($copy) {
+                if ($action == 'duplicate') {
                     $task_id = $this->taskDuplication->duplicateToProject($task['id'], $values['project_id']);
                     $redirect_task_id = $task_id;
                 } else {
@@ -457,17 +452,16 @@ class Task extends Base
                     $redirect_task_id = $task['id'];
                 }
                 if ($task_id) {
-                    $this->session->flash(t($copy ? 'Task created successfully.' : 'Task updated successfully.'));
+                    $this->session->flash(t('Task ' . $action_message . 'd successfully.'));
                     $this->response->redirect('?controller=task&action=show&task_id='.$redirect_task_id.'&project_id='.$values['project_id']);
                 }
                 else {
-                    $this->session->flashError(t($copy ? 'Unable to create your task.' : 'Unable to update your task.'));
+                    $this->session->flashError(t('Unable to ' . $action_message . ' your task.'));
                 }
             }
         }
 
-        $template_name = $copy ? 'task/duplicate_project' : 'task/move_project';
-        $this->response->html($this->taskLayout($template_name, array(
+        $this->response->html($this->taskLayout('task/' . $action . '_project', array(
             'values' => $values,
             'errors' => $errors,
             'task' => $task,

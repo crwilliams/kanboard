@@ -329,7 +329,7 @@ class Project extends Base
      */
     public function disable()
     {
-        $this->enableOrDisable(true);
+        $this->enableOrDisable('disable', 'disable');
     }
 
     /**
@@ -339,16 +339,17 @@ class Project extends Base
      */
     public function enable()
     {
-        $this->enableOrDisable(false);
+        $this->enableOrDisable('enable', 'activate');
     }
 
     /**
      * Enable or disable a project
      *
      * @access private
-     * @param boolean   $disable  Whether to disable the project
+     * @param string   $action          The name of the action
+     * @param string   $action_message  The name of the action to use in the displayed message
      */
-    private function enableOrDisable($disable)
+    private function enableOrDisable($action, $action_message)
     {
         $project = $this->getProject();
 
@@ -356,22 +357,16 @@ class Project extends Base
 
             $this->checkCSRFParam();
 
-            if ($disable) {
-                $success = $this->project->enable($project['id']);
+            if ($this->project->$action($project['id'])) {
+                $this->session->flash(t('Project ' . $action_message . 'd successfully.'));
             } else {
-                $success = $this->project->disable($project['id']);
-            }
-            if ($success) {
-                $this->session->flash(t($disable ? 'Project disabled successfully.' : 'Project activated successfully.'));
-            } else {
-                $this->session->flashError(t($disable ? 'Unable to disable this project.' : 'Unable to activate this project.'));
+                $this->session->flashError(t('Unable to ' . $action_message . ' this project.'));
             }
 
             $this->response->redirect('?controller=project&action=show&project_id='.$project['id']);
         }
 
-        $template_name = $disable ? 'project/disable' : 'project/enable';
-        $this->response->html($this->projectLayout($template_name, array(
+        $this->response->html($this->projectLayout('project/' . $action, array(
             'project' => $project,
             'title' => t('Project activation')
         )));
