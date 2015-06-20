@@ -111,7 +111,7 @@ class User extends Base
      *
      * @access public
      * @param  string  $google_id  Google unique id
-     * @return array|boolean
+     * @return array|false
      */
     public function getByGoogleId($google_id)
     {
@@ -127,7 +127,7 @@ class User extends Base
      *
      * @access public
      * @param  string  $github_id  GitHub user id
-     * @return array|boolean
+     * @return array|false
      */
     public function getByGitHubId($github_id)
     {
@@ -155,7 +155,7 @@ class User extends Base
      *
      * @access public
      * @param  string  $email  Email
-     * @return array|boolean
+     * @return array|false
      */
     public function getByEmail($email)
     {
@@ -171,7 +171,7 @@ class User extends Base
      *
      * @access public
      * @param  string   $token    Token
-     * @return array|boolean
+     * @return array|false
      */
     public function getByToken($token)
     {
