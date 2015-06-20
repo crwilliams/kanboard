@@ -37,7 +37,6 @@ class Notification extends Base
     public function sendOverdueTaskNotifications()
     {
         $tasks = $this->taskFinder->getOverdueTasks();
-        $projects = array();
 
         foreach ($this->groupByColumn($tasks, 'project_id') as $project_id => $project_tasks) {
 
